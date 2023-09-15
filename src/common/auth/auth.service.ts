@@ -200,8 +200,10 @@ export class AuthService {
       timeCost: 3,
     });
   }
+  
 
   private verifyHash(password1: string, password2: string): Promise<boolean> {
     return Bun.password.verify(password1, password2, "argon2d");
+
   }
 }
