@@ -6,7 +6,7 @@
   "private": true,
   "license": "MIT",
   "scripts": {
-    "prisma:dev:deploy": "cd src && cd modules && cd user && bun x prisma generate && bun x prisma migrate deploy",
+    "prisma:dev:deploy": "cd src/modules/user && bun x prisma generate && bun x prisma migrate deploy && cd ../../../ ",
     "userDb:dev:rm": "docker compose rm instakilo-user-db -s -f -v",
     "userDb:dev:up": "docker compose up instakilo-user-db -d",
     "userDb:dev:restart": "bun run userDb:dev:rm && bun run userDb:dev:up && prisma:dev:deploy",
@@ -23,7 +23,7 @@
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",
     "start:dev": "nest start --watch --exec \"bun run\"",
-    "start:with:deployment": "bun install && bun run build && bun run prisma:dev:deploy && docker-compose up && bun run start:dev",
+    "start:with:deployment": "bun install && bun run prisma:dev:deploy && bun run build && docker compose up && bun run start:dev",
     "start:debug": "nest start --debug --watch --exec \"bun run\"",
     "start:prod": "node dist/main",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",

@@ -5,7 +5,6 @@ export * from "./post/post.module"
 export * from "./likes/likes.module"
 export * from "./comment/comment.module"
 export * from "./feed/feed.module"
-export * from "./likes/likes-thinky/thinky.module"
 
 //export services
 export * from "./user/user.service"
