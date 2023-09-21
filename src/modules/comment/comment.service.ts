@@ -12,9 +12,7 @@ import { randomUUID } from "crypto";
 export class CommentService {
   private readonly couchdb: Nano.ServerScope;
   constructor() {
-    this.couchdb = Nano(
-      process.env.COUCHDB_URL,
-    );
+    this.couchdb = Nano(process.env.COUCHDB_URL);
   }
 
   async createComment(

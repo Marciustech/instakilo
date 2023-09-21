@@ -6,7 +6,9 @@ import {
   LikesModule,
   CommentModule,
   PostModule,
-  feed,
+  FeedModule,
+  StoriesModule,
+  ChatModule,
 } from "./modules/index";
 import { ApiGatewayModule } from "./api_gateway/api_gateway.module";
 
@@ -15,11 +17,13 @@ import { ApiGatewayModule } from "./api_gateway/api_gateway.module";
     AuthModule,
     UserModule,
     CommentModule,
-    feed,
+    FeedModule,
     ApiGatewayModule,
     UserPrismaModule,
     LikesModule,
     PostModule,
+    AppModule,
+    ChatModule,
   ],
 })
 export class AppModule {}
