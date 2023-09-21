@@ -11,7 +11,7 @@
 
   <h3>🔧 Prerequisites</h3>
   <p>Node.js - version 18 or higher</p>
-  <p>Bun - version 1.0.0</p>
+  <p>Bun - version 1.0.2</p>
   <p>Docker - version 24 or higher</p>
 
   <h3>⚙️ Installation</h3>
