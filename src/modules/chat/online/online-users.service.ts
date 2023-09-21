@@ -8,17 +8,17 @@ export class OnlineUsersService {
 
   constructor() {
     this.db = new Redis({
-      host: "localhost",
-      port: 6379,
+      host: process.env.REDIS_HOST,
+      port: parseInt(process.env.REDIS_PORT),
     });
   }
 
   async setUserOnline(userId: string, socketId: string): Promise<void> {
-    await this.db.set(userId, socketId);
+    const response = await this.db.set(userId, socketId);
   }
 
   async setUserOffline(userId: string): Promise<void> {
-    await this.db.set(userId, "offline");
+    const response = await this.db.set(userId, "offline");
   }
 
   async isUserOnline(userId: string): Promise<boolean> {
@@ -31,7 +31,14 @@ export class OnlineUsersService {
     return result;
   }
 
-  async getAll() {
-    return await this.db.keys("*");
+  async logAllStatus() {
+    console.log("Online/offline: ");
+    const keys = await this.db.keys("*");
+    keys.forEach(async (key) => {
+      const value = await this.db.get(key);
+      console.log(
+        `User: ${key}, Status: ${value !== "offline" ? "online" : value}`,
+      );
+    });
   }
 }

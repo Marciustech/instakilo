@@ -18,12 +18,9 @@ export class MessageEntity {
   @Column({ type: "timestamp", default: () => "CURRENT_TIMESTAMP" })
   createAt: Date;
 
-  @Column("boolean")
+  @Column({ type: "boolean", default: false })
   isViewed: boolean;
 
-  @ManyToOne(
-    () => ConversationEntity,
-    (ConversationEntity) => ConversationEntity.messages,
-  )
+  @ManyToOne(() => ConversationEntity, (conversation) => conversation.messages)
   conversation: ConversationEntity;
 }

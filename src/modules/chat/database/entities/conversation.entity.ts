@@ -6,10 +6,10 @@ export class ConversationEntity {
   @PrimaryGeneratedColumn("uuid")
   conversationId: string;
 
-  @Column({ type: "json" })
+  @Column("json")
   participants: string[];
 
-  @OneToMany(() => MessageEntity, (MessageEntity) => MessageEntity.conversation)
+  @OneToMany(() => MessageEntity, (message) => message.conversation)
   messages: MessageEntity[];
 
   @Column({ type: "timestamp", default: () => "CURRENT_TIMESTAMP" })

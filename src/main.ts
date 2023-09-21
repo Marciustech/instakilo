@@ -15,7 +15,7 @@ async function bootstrap() {
     .addBearerAuth()
     .setTitle("Instakilo")
     .setDescription("The Instakilo API")
-    .setVersion("0.5")
+    .setVersion("0.6")
     .setLicense("License", "https://mit-license.org/")
     .build();
   const document = SwaggerModule.createDocument(app, config);

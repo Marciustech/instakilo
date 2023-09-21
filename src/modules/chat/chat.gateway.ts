@@ -32,14 +32,15 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
     this.onlineService.setUserOnline(userId, socketId);
     this.connectToExistingConversations(client, userId);
+    await this.onlineService.logAllStatus();
   }
 
-  handleDisconnect(client: Socket) {
+  async handleDisconnect(client: Socket) {
     console.log(`Client disconnected: ${client.request.headers.user}`);
 
     const userId: string = client.request.headers.user as string;
-
     this.onlineService.setUserOffline(userId);
+    await this.onlineService.logAllStatus();
   }
 
   //@UseGuards(AtGuard)
@@ -49,42 +50,42 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @ConnectedSocket() client: Socket,
     @MessageBody() data: MessageDto,
   ) {
-    await this.deliverMessage(client, data);
-  }
-
-  private async deliverMessage(
-    client: Socket,
-    data: MessageDto,
-  ): Promise<Boolean> {
-    if (data.conversationId) {
-      if (this.onlineService.isUserOnline(data.recipientId)) {
-        //TODO implement offline message sending
-        throw new Error("Not Implemented offline message sending");
-      }
-      if (client.to(data.conversationId).emit("dm", data)) {
-        this.storeMessage(data.conversationId, data);
-        return;
-      }
+    if (this.onlineService.isUserOnline(data.recipientId)) {
+      return await this.deliverOnlineMessage(client, data);
     }
 
-    const newConversationId = (await this.chatService.createConversation(data))
-      .conversationId;
+    if (!this.onlineService.isUserOnline(data.recipientId)) {
+      return await await this.deliverOfflineMessage(data);
+    }
+  }
+  private async deliverOfflineMessage(data: MessageDto) {
+    throw new Error("Method not implemented.");
+  }
+
+  private async deliverOnlineMessage(client: Socket, data: MessageDto) {
+    const conversation =
+      await this.chatService.conversationExistsForUsers(data);
+    if (!conversation) {
+      data.conversationId = await this.handleNewConversation(client, data);
+    }
+
+    client.to(conversation.conversationId).emit("dm", data);
+    this.chatService.storeMessage(data.conversationId, data);
+  }
+  private async handleNewConversation(
+    client: Socket,
+    data: MessageDto,
+  ): Promise<string> {
+    console.log(typeof data);
+    const newConversation = await this.chatService.createConversation(data);
 
     await this.connectToNewConversation(
       client,
       data.recipientId,
-      newConversationId,
+      newConversation.conversationId,
     );
 
-    const isSentSuccessfully = client.to(newConversationId).emit("dm", data);
-
-    if (isSentSuccessfully) {
-      this.storeMessage(newConversationId, data);
-    }
-  }
-
-  private storeMessage(conversationId: string, data: MessageDto) {
-    this.chatService.storeMessage(conversationId, data);
+    return newConversation.conversationId;
   }
 
   private async connectToExistingConversations(
@@ -97,30 +98,31 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       return;
     }
     for (let conversation of conversations) {
-      client.join(conversation);
+      console.log(
+        `Connecting user ${userId} to Conversation ${conversation.conversationId}`,
+      );
+      client.join(conversation.conversationId);
     }
   }
 
+  //find online socket of online user and join it to conversation room
   private async connectToNewConversation(
     client: Socket,
     recipient: string,
     newConversationId: string,
-  ): Promise<boolean> {
+  ) {
     client.join(newConversationId);
-    if (this.onlineService.isUserOnline(recipient)) {
-      const recipientSocketId: string =
-        await this.onlineService.getUserSocketId(recipient);
-      //TODO find socket by id and add to the room based on redis query
-      const sockets = await this.server.fetchSockets();
-      let recipientSocket: any;
-      for (let socket of sockets) {
-        if (socket.id === recipientSocketId) {
-          recipientSocket = socket;
-        }
+    const recipientSocketId: string =
+      await this.onlineService.getUserSocketId(recipient);
+
+    const sockets = await this.server.fetchSockets();
+    let recipientSocket: any;
+    for (let socket of sockets) {
+      if (socket.id === recipientSocketId) {
+        recipientSocket = socket;
       }
-      recipientSocket.join(newConversationId);
-      return true;
     }
-    return false;
+    recipientSocket.join(newConversationId);
+    return true;
   }
 }

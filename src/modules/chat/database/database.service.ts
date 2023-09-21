@@ -36,7 +36,9 @@ export class ChatDatabaseService implements OnModuleInit, OnModuleDestroy {
     newMessage.conversation = conversation;
 
     const messageRepository = this.db.getRepository(MessageEntity);
-    return await messageRepository.save(newMessage);
+    const response = await messageRepository.save(newMessage);
+    console.log(response);
+    return response;
   }
 
   async getMessagesByConversationId(conversationId: string) {
@@ -63,15 +65,35 @@ export class ChatDatabaseService implements OnModuleInit, OnModuleDestroy {
     return savedConversation;
   }
 
-  async getConversationsByUserId(userId: string) {
+  async getConversationsByUserId(
+    userId: string,
+  ): Promise<ConversationEntity[]> {
     const conversationRepository = this.db.getRepository(ConversationEntity);
 
     const conversations = await conversationRepository
       .createQueryBuilder("conversation")
-      .where(":userId = ANY(conversation.participants)", { userId })
+      .where("JSON_CONTAINS(participants, :userId)", {
+        userId: JSON.stringify(userId),
+      })
       .getMany();
 
     return conversations;
+  }
+
+  async conversationExistsForUsers(userId1: string, userId2: string) {
+    const conversationRepository = this.db.getRepository(ConversationEntity);
+
+    const conversation = await conversationRepository
+      .createQueryBuilder("conversation")
+      .where("JSON_SEARCH(participants, 'one', :userId1) IS NOT NULL", {
+        userId1,
+      })
+      .andWhere("JSON_SEARCH(participants, 'one', :userId2) IS NOT NULL", {
+        userId2,
+      })
+      .getOne();
+
+    return conversation;
   }
 
   async getAll() {

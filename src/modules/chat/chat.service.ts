@@ -17,6 +17,13 @@ export class ChatService {
     return await this.db.saveMessage(conversationId, message);
   }
 
+  async conversationExistsForUsers(message: any) {
+    return await this.db.conversationExistsForUsers(
+      message.senderId,
+      message.recipientId,
+    );
+  }
+
   async getAll() {
     return await this.db.getAll();
   }
