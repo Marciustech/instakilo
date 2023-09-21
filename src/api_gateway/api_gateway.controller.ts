@@ -23,7 +23,7 @@ import {
   CreateCommentDto,
 } from "./dto/index";
 import { User, AtGuard, RtGuard } from "src/common/index";
-import { AuthService } from "src/auth/auth.service";
+import { AuthService } from "src/common/auth/auth.service";
 import { UserService, CommentService, LikesService } from "src/modules/index";
 import {
   ApiBadRequestResponse,

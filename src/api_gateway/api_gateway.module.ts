@@ -1,5 +1,5 @@
 import { Module } from "@nestjs/common";
-import { AuthService } from "src/auth/auth.service";
+import { AuthService } from "src/common/auth/auth.service";
 import { GatewayController } from "./api_gateway.controller";
 import { JwtModule } from "@nestjs/jwt";
 import {
@@ -7,12 +7,11 @@ import {
   PostModule,
   CommentService,
   LikesService,
-  ThinkyModule,
 } from "../modules/index";
 import { ApiGatewayService } from "./api_gateway.service";
 
 @Module({
-  imports: [JwtModule, PostModule, ThinkyModule],
+  imports: [JwtModule, PostModule],
   controllers: [GatewayController],
   providers: [
     AuthService,

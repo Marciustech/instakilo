@@ -4,15 +4,11 @@ import {
   Injectable,
   BadRequestException,
 } from "@nestjs/common";
-import { UserPrismaService } from "../modules/user/user-prisma/user-prisma.service";
-import * as argon from "argon2";
+import { UserPrismaService } from "../../modules/user/user-prisma/user-prisma.service";
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
 import { JwtService } from "@nestjs/jwt";
-import { tokens } from "./types";
-import {
-  RegistrationDto,
-  LoginDto,
-} from "../api_gateway/dto/index";
+import { TokenPayload, Tokens } from "./types";
+import { RegistrationDto, LoginDto } from "../../api_gateway/dto/index";
 
 @Injectable()
 export class AuthService {
@@ -34,8 +30,8 @@ export class AuthService {
               photo_url: "",
               bio: "",
               followerCount: 0,
-              followsCount: 0
-            }
+              followsCount: 0,
+            },
           },
         },
       });
@@ -54,26 +50,25 @@ export class AuthService {
   }
 
   async login(dto: LoginDto) {
+    const user = await this.userPrisma.user.findUnique({
+      where: {
+        email: dto.email,
+      },
+    });
+
+    if (!user) throw new ForbiddenException("User not registered");
+
+    const passwordMatch = await this.verifyHash(dto.password, user.hash);
+
+    if (!passwordMatch) throw new ForbiddenException("Invalid password");
+
     try {
-      const user = await this.userPrisma.user.findUnique({
-        where: {
-          email: dto.email,
-        },
+      const { accessToken, refreshToken } = await this.getTokens({
+        uuid: user.id,
+        email: user.email,
+        username: user.username,
       });
 
-      if (!user) throw new ForbiddenException("User not registered");
-
-      const passwordMatch = await this.verifyHash(user.hash, dto.password);
-
-      if (!passwordMatch) throw new ForbiddenException("Invalid password");
-
-      const { accessToken, refreshToken } = await this.getTokens(
-        user.id,
-        user.email,
-        user.username,
-      );
-
-      //save refresh token to db
       await this.updateRefreshToken(user.id, refreshToken);
 
       return {
@@ -82,7 +77,7 @@ export class AuthService {
         refreshToken,
       };
     } catch (error) {
-      throw new InternalServerErrorException({ error });
+      console.log(error);
     }
   }
 
@@ -109,36 +104,19 @@ export class AuthService {
     }
   }
 
-  async getTokens(
-    uuid: string,
-    email: string,
-    username: string,
-  ): Promise<tokens> {
+  async getTokens(payload: TokenPayload): Promise<Tokens> {
+    const jwt_token_options = {
+      secret: process.env.JWT_SECRET,
+      expiresIn: 60 * 15,
+    };
+    const jwt_refresh_token_options = {
+      secret: process.env.REFRESH_JWT_SECRET,
+      expiresIn: 60 * 60 * 24 * 7,
+    };
+
     const [accessToken, refreshToken] = await Promise.all([
-      await this.jwt.signAsync(
-        {
-          uuid,
-          email,
-          username,
-        },
-        {
-          secret: process.env.JWT_SECRET,
-          //TODO: change expiration date to 60*15 for production
-          expiresIn: 60 * 15,
-        },
-      ),
-      await this.jwt.signAsync(
-        {
-          uuid,
-          email,
-          username,
-        },
-        {
-          secret: process.env.REFRESH_JWT_SECRET,
-          //one week expiration
-          expiresIn: 60 * 60 * 24 * 7,
-        },
-      ),
+      await this.jwt.signAsync(payload, jwt_token_options),
+      await this.jwt.signAsync(payload, jwt_refresh_token_options),
     ]);
     return {
       accessToken,
@@ -173,17 +151,17 @@ export class AuthService {
       if (!user) throw new ForbiddenException("No User Found");
 
       const refresh_token_matches = this.verifyHash(
-        user.hashedRefreshToken,
         dto.refreshToken,
+        user.hashedRefreshToken,
       );
 
       if (!refresh_token_matches) throw new ForbiddenException("Access denied");
 
-      const { accessToken, refreshToken } = await this.getTokens(
-        user.id,
-        user.email,
-        user.username,
-      );
+      const { accessToken, refreshToken } = await this.getTokens({
+        uuid: user.id,
+        email: user.email,
+        username: user.username,
+      });
 
       await this.updateRefreshToken(user.id, refreshToken);
 
@@ -198,10 +176,14 @@ export class AuthService {
   }
 
   private hashData(data: string): Promise<string> {
-    return argon.hash(data);
+    return Bun.password.hash(data, {
+      algorithm: "argon2d",
+      memoryCost: 4,
+      timeCost: 3,
+    });
   }
 
-  private verifyHash(password1: string, password2: string): Promise<boolean> {
-    return argon.verify(password1, password2);
+  private verifyHash(password: string, passwordHash: string): Promise<boolean> {
+    return Bun.password.verify(password, passwordHash, "argon2d");
   }
 }

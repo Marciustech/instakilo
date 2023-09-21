@@ -11,7 +11,7 @@
 
   <h3>🔧 Prerequisites</h3>
   <p>Node.js - version 18 or higher</p>
-  <p>npm - version 8 or higher</p>
+  <p>Bun - version 1.0.0</p>
   <p>Docker - version 24 or higher</p>
 
   <h3>⚙️ Installation</h3>
@@ -31,7 +31,7 @@
     <li>Quick Start:</li>
   </ol>
   
-  <pre><code>npm run start:with:deployment</code></pre>
+  <pre><code>bun run start:with:deployment</code></pre>
   
   <h3>🚀 Usage</h3>
 

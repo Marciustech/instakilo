@@ -64,10 +64,7 @@ export class UserService {
     return followingResponse;
   }
 
-  private async removeFollowing(
-    follower: any,
-    userToUnfollow: IUser,
-  ) {
+  private async removeFollowing(follower: any, userToUnfollow: IUser) {
     const unfollowResponse = await this.userPrisma.following.deleteMany({
       where: {
         user: {
@@ -97,10 +94,7 @@ export class UserService {
         throw new ForbiddenException("User to follow not found");
       }
 
-      const followingResponse = await this.addFollowing(
-        follower,
-        userToFollow,
-      );
+      const followingResponse = await this.addFollowing(follower, userToFollow);
 
       return {
         message: "User Followed successfully",

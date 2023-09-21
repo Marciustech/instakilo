@@ -7,6 +7,6 @@ export class LoginDto {
   @ApiProperty({ type: String, description: "Insert your registered email" })
   email: string;
   @IsNotEmpty()
-  @ApiProperty({ type: String, description: "Insert your registered password"})
+  @ApiProperty({ type: String, description: "Insert your registered password" })
   password: string;
 }

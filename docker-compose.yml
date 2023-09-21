@@ -33,12 +33,29 @@ services:
   instakilo-likes-db:
     image: rethinkdb:latest
     ports:
-      - '8080:8080'  # RethinkDB web UI
-      - '28015:28015' # RethinkDB client driver port
-      - '29015:29015' # RethinkDB intracluster communication port
+      - "8081:8080" # RethinkDB web UI
+      - "28015:28015" # RethinkDB client driver port
+      - "29015:29015" # RethinkDB intracluster communication port
     networks:
       - instakiloNetwork
     environment:
       RETHINKDB_PASSWORD: ${RETHINKDB_PASSWORD}
+  instakilo-chat-db:
+    image: mysql:5.7
+    restart: always
+    environment:
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_ROOT_HOST: '%'
+    ports:
+      - "${MYSQL_PORT}:3306"
+    networks:
+      - instakiloNetwork
+  instakilo-online-users-db:
+    image: redis
+    ports:
+      - "6379:6379"
 networks:
   instakiloNetwork:

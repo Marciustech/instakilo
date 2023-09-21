@@ -1,11 +1,11 @@
-import { BadRequestException, Inject, Injectable } from "@nestjs/common";
+import { BadRequestException, Injectable } from "@nestjs/common";
 import PostLikes from "./models/post-likes.model";
-import { LikeCommentDto, LikePostDto } from "../../api_gateway/dto/like-dto";
 import CommentLikes from "./models/comment-likes.model";
+import { LikeCommentDto, LikePostDto } from "../../api_gateway/dto/like-dto";
 
 @Injectable()
 export class LikesService {
-  constructor(@Inject("RETHINKDB_CONNECTION") private readonly rethinkdb) {}
+  constructor() {}
 
   async getAllPostLikes() {
     return await PostLikes.run();
