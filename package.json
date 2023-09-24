@@ -47,7 +47,7 @@
     "mysql2": "^3.6.1",
     "nano": "^10.1.2",
     "passport": "^0.6.0",
-    "passport-jwt": "^4.0.1",
+    "passport-jwt": "4.0.0",
     "phc-argon2": "^1.1.4",
     "react": "^18.2.0",
     "redis": "^4.6.9",
