@@ -44,7 +44,7 @@ export class ChatDatabaseService implements OnModuleInit, OnModuleDestroy {
   async getMessagesByConversationId(conversationId: string) {
     const messageRepository = this.db.getRepository(MessageEntity);
     const messages = await messageRepository
-      .createQueryBuilder("messagesByCOnversationId")
+      .createQueryBuilder("message")
       .innerJoin("message.conversation", "conversation")
       .where("conversation.conversationId = :conversationId", {
         conversationId,
@@ -94,6 +94,25 @@ export class ChatDatabaseService implements OnModuleInit, OnModuleDestroy {
       .getOne();
 
     return conversation;
+  }
+
+  async markMessageAsViewed(data: any): Promise<boolean> {
+    const messageRepository = this.db.getRepository(MessageEntity);
+
+    const message = await messageRepository.findOne({
+      where: {
+        messageId: data.messageId,
+      },
+    });
+
+    if (!message) {
+      return false;
+    }
+
+    message.isViewed = true;
+
+    await messageRepository.save(message);
+    return true;
   }
 
   async getAll() {

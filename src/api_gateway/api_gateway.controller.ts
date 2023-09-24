@@ -24,7 +24,12 @@ import {
 } from "./dto/index";
 import { User, AtGuard, RtGuard } from "src/common/index";
 import { AuthService } from "src/common/auth/auth.service";
-import { UserService, CommentService, LikesService } from "src/modules/index";
+import {
+  UserService,
+  CommentService,
+  LikesService,
+  ChatService,
+} from "src/modules/index";
 import {
   ApiBadRequestResponse,
   ApiBearerAuth,
@@ -44,6 +49,7 @@ export class GatewayController {
     private userService: UserService,
     private commentService: CommentService,
     private likesService: LikesService,
+    private chatService: ChatService,
   ) {
     this.postServiceClient = new ApolloClient({
       uri: process.env.GRAPHQL_URL,
@@ -65,7 +71,7 @@ export class GatewayController {
   @HttpCode(HttpStatus.OK)
   @ApiOkResponse({ description: "User access successful" })
   @ApiForbiddenResponse({
-    description: "User not registered or Invalid password",
+    description: "User not registered/Invalid password",
   })
   async login(@Body() dto: LoginDto) {
     return this.authService.login(dto);
@@ -245,5 +251,32 @@ export class GatewayController {
   @Post("likes/unlike-comment")
   async unlikeComment(@User() user: any, @Body() unlikeInput: any) {
     return this.likesService.unlikeComment(unlikeInput);
+  }
+
+  @Get("chat/messages/:conversationId")
+  @ApiParam({
+    name: "Conversation Id",
+    type: String,
+    required: true,
+  })
+  async getMessagesByConversationId(
+    @Param("conversationId") conversationId: string,
+  ) {
+    return this.chatService.getMessagesByConversationId(conversationId);
+  }
+
+  @Get("chat/conversations/:userId")
+  @ApiParam({
+    name: "User Id",
+    type: String,
+    required: true,
+  })
+  async getConversationsByUserId(@Param("userId") userId: string) {
+    return await this.chatService.getConversationsByUserId(userId);
+  }
+
+  @Put("chat/messages/viewed")
+  async markMessageAsViewed(@Body() data: any) {
+    return await this.chatService.markMessageAsViewed(data);
   }
 }

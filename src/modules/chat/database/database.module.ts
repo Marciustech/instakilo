@@ -1,4 +1,7 @@
 import { Module } from "@nestjs/common";
+import { ChatDatabaseService } from "./database.service";
 
-@Module({})
+@Module({
+  providers: [ChatDatabaseService],
+})
 export class ChatDatabaseModule {}

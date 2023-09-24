@@ -1,4 +1,4 @@
-import { Injectable } from "@nestjs/common";
+import { BadRequestException, Injectable } from "@nestjs/common";
 import { ChatDatabaseService } from "./database/database.service";
 
 @Injectable()
@@ -26,5 +26,16 @@ export class ChatService {
 
   async getAll() {
     return await this.db.getAll();
+  }
+
+  async getMessagesByConversationId(conversationId: string) {
+    return await this.db.getMessagesByConversationId(conversationId);
+  }
+
+  async markMessageAsViewed(data: any) {
+    if (await this.db.markMessageAsViewed(data)) {
+      return { message: "Message marked as viewed" };
+    }
+    throw new BadRequestException("Message not found");
   }
 }

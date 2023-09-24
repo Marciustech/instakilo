@@ -15,7 +15,9 @@ import { join } from "path";
         "src/modules/post/graphql/schema.gql",
       ),
     }),
-    MongooseModule.forRoot("mongodb://localhost:27017"),
+    MongooseModule.forRoot(
+      process.env.MONGO_URI || "mongodb://localhost:27017",
+    ),
     MongooseModule.forFeature([{ name: Post.name, schema: PostSchema }]),
   ],
   providers: [PostService, PostResolver],

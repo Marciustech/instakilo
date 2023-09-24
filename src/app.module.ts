@@ -11,19 +11,9 @@ import {
   ChatModule,
 } from "./modules/index";
 import { ApiGatewayModule } from "./api_gateway/api_gateway.module";
+import { MongooseModule } from "@nestjs/mongoose";
 
 @Module({
-  imports: [
-    AuthModule,
-    UserModule,
-    CommentModule,
-    FeedModule,
-    ApiGatewayModule,
-    UserPrismaModule,
-    LikesModule,
-    PostModule,
-    AppModule,
-    ChatModule,
-  ],
+  imports: [ApiGatewayModule],
 })
 export class AppModule {}

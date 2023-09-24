@@ -7,11 +7,32 @@ import {
   PostModule,
   CommentService,
   LikesService,
+  ChatModule,
+  ChatService,
+  ChatDatabaseModule,
+  ChatDatabaseService,
+  CommentModule,
+  FeedModule,
+  LikesModule,
+  UserModule,
+  UserPrismaModule,
+  PostService,
 } from "../modules/index";
 import { ApiGatewayService } from "./api_gateway.service";
+import { MongooseModule } from "@nestjs/mongoose";
+import { AuthModule } from "src/common/auth/auth.module";
 
 @Module({
-  imports: [JwtModule, PostModule],
+  imports: [
+    JwtModule,
+    AuthModule,
+    UserModule,
+    CommentModule,
+    FeedModule,
+    LikesModule,
+    //PostModule,
+    ChatModule,
+  ],
   controllers: [GatewayController],
   providers: [
     AuthService,
@@ -19,6 +40,9 @@ import { ApiGatewayService } from "./api_gateway.service";
     CommentService,
     LikesService,
     ApiGatewayService,
+    ChatService,
+    ChatDatabaseService,
+    //PostService
   ],
 })
 export class ApiGatewayModule {}

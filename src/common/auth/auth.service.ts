@@ -6,7 +6,7 @@ import {
 } from "@nestjs/common";
 import { UserPrismaService } from "../../modules/user/user-prisma/user-prisma.service";
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
-import { JwtService } from "@nestjs/jwt";
+import { JwtService, JwtSignOptions } from "@nestjs/jwt";
 import { TokenPayload, Tokens } from "./types";
 import { RegistrationDto, LoginDto } from "../../api_gateway/dto/index";
 
@@ -69,7 +69,7 @@ export class AuthService {
         username: user.username,
       });
 
-      await this.updateRefreshToken(user.id, refreshToken);
+      await this.storeRefreshToken(user.id, refreshToken);
 
       return {
         message: "User access successful",
@@ -104,27 +104,32 @@ export class AuthService {
     }
   }
 
-  async getTokens(payload: TokenPayload): Promise<Tokens> {
-    const jwt_token_options = {
+  private async getTokens(payload: TokenPayload): Promise<Tokens> {
+    const jwt_token_options: JwtSignOptions  = {
       secret: process.env.JWT_SECRET,
       expiresIn: 60 * 15,
     };
-    const jwt_refresh_token_options = {
+    const jwt_refresh_token_options: JwtSignOptions  = {
       secret: process.env.REFRESH_JWT_SECRET,
       expiresIn: 60 * 60 * 24 * 7,
     };
 
-    const [accessToken, refreshToken] = await Promise.all([
-      await this.jwt.signAsync(payload, jwt_token_options),
-      await this.jwt.signAsync(payload, jwt_refresh_token_options),
-    ]);
-    return {
-      accessToken,
-      refreshToken,
-    };
+    try {
+      const [accessToken, refreshToken] = await Promise.all([
+        await this.jwt.signAsync(payload, jwt_token_options),
+        await this.jwt.signAsync(payload, jwt_refresh_token_options),
+      ]);
+
+      return {
+        accessToken,
+        refreshToken,
+      };
+    } catch (error) {
+      console.error(error)
+    }
   }
 
-  async updateRefreshToken(id: string, refreshToken: string): Promise<void> {
+  async storeRefreshToken(id: string, refreshToken: string): Promise<void> {
     try {
       const hashedRefreshToken = await this.hashData(refreshToken);
       await this.userPrisma.user.update({
@@ -163,7 +168,7 @@ export class AuthService {
         username: user.username,
       });
 
-      await this.updateRefreshToken(user.id, refreshToken);
+      await this.storeRefreshToken(user.id, refreshToken);
 
       return {
         message: "Refreshed Tokens successfully",
