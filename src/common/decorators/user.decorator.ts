@@ -1,12 +1,15 @@
 import { createParamDecorator, ExecutionContext } from "@nestjs/common";
+import { Request } from "express";
 import { Socket } from "socket.io";
 
 export const User = createParamDecorator(
   (data: string, ctx: ExecutionContext) => {
     if (ctx.getType() === "http") {
-      const request = ctx.switchToHttp().getRequest();
+      const request: Request = ctx.switchToHttp().getRequest();
       const user = request.user;
-      return data ? user?.[data] : user;
+      const userResponse = data ? user?.[data] : user;
+      console.log(userResponse);
+      return userResponse;
     }
     if (ctx.getType() === "ws") {
       const client: Socket = ctx.switchToWs().getClient();

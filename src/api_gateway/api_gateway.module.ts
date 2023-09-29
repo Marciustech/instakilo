@@ -15,16 +15,14 @@ import {
   FeedModule,
   LikesModule,
   UserModule,
-  UserPrismaModule,
-  PostService,
 } from "../modules/index";
 import { ApiGatewayService } from "./api_gateway.service";
-import { MongooseModule } from "@nestjs/mongoose";
 import { AuthModule } from "src/common/auth/auth.module";
+import { MongooseModule } from "@nestjs/mongoose";
 
 @Module({
   imports: [
-    JwtModule,
+    JwtModule.register({}),
     AuthModule,
     UserModule,
     CommentModule,
@@ -42,7 +40,6 @@ import { AuthModule } from "src/common/auth/auth.module";
     ApiGatewayService,
     ChatService,
     ChatDatabaseService,
-    //PostService
   ],
 })
 export class ApiGatewayModule {}

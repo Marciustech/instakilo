@@ -105,11 +105,11 @@ export class AuthService {
   }
 
   private async getTokens(payload: TokenPayload): Promise<Tokens> {
-    const jwt_token_options: JwtSignOptions  = {
+    const jwt_token_options: JwtSignOptions = {
       secret: process.env.JWT_SECRET,
       expiresIn: 60 * 15,
     };
-    const jwt_refresh_token_options: JwtSignOptions  = {
+    const jwt_refresh_token_options: JwtSignOptions = {
       secret: process.env.REFRESH_JWT_SECRET,
       expiresIn: 60 * 60 * 24 * 7,
     };
@@ -125,7 +125,7 @@ export class AuthService {
         refreshToken,
       };
     } catch (error) {
-      console.error(error)
+      console.error(error);
     }
   }
 
