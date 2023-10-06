@@ -9,6 +9,7 @@ import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
 import { JwtService, JwtSignOptions } from "@nestjs/jwt";
 import { TokenPayload, Tokens } from "./types";
 import { RegistrationDto, LoginDto } from "../../api_gateway/dto/index";
+import * as argon from "argon2";
 
 @Injectable()
 export class AuthService {
@@ -181,14 +182,17 @@ export class AuthService {
   }
 
   private hashData(data: string): Promise<string> {
-    return Bun.password.hash(data, {
-      algorithm: "argon2d",
-      memoryCost: 4,
+    const options = {
       timeCost: 3,
-    });
+      memoryCost: 65536,
+      parallelism: 2,
+      type: argon.argon2i,
+      hashLength: 32,
+    };
+    return argon.hash(data, options);
   }
 
   private verifyHash(password: string, passwordHash: string): Promise<boolean> {
-    return Bun.password.verify(password, passwordHash, "argon2d");
+    return argon.verify(password, passwordHash);
   }
 }
