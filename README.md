@@ -19,7 +19,7 @@
     <li>Clone the repository:</li>
   </ol>
 
-  <pre><code>git clone https://github.com/Marciustech/instakilo.git</code></pre>
+  <pre><code>git clone https://github.com/coding-agent/instakilo.git</code></pre>
 
   <ol start="2">
     <li>Navigate to the project directory:</li>
@@ -31,7 +31,7 @@
     <li>Quick Start:</li>
   </ol>
   
-  <pre><code>bun run start:with:deployment</code></pre>
+  <pre><code>yarn run quickstart</code></pre>
   
   <h3>🚀 Usage</h3>
 
