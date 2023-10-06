@@ -19,16 +19,21 @@ import {
 import { ApiGatewayService } from "./api_gateway.service";
 import { AuthModule } from "src/common/auth/auth.module";
 import { MongooseModule } from "@nestjs/mongoose";
+import { PrometheusModule } from "@willsoto/nestjs-prometheus";
 
 @Module({
   imports: [
     JwtModule.register({}),
+    MongooseModule.forRoot(process.env.MONGO_URI),
+    /*PrometheusModule.register({
+      controller: GatewayController,
+    }),*/
     AuthModule,
     UserModule,
     CommentModule,
     FeedModule,
     LikesModule,
-    //PostModule,
+    PostModule,
     ChatModule,
   ],
   controllers: [GatewayController],
