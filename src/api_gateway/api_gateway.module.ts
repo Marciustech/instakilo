@@ -9,7 +9,6 @@ import {
   LikesService,
   ChatModule,
   ChatService,
-  ChatDatabaseModule,
   ChatDatabaseService,
   CommentModule,
   FeedModule,
@@ -19,15 +18,17 @@ import {
 import { ApiGatewayService } from "./api_gateway.service";
 import { AuthModule } from "src/common/auth/auth.module";
 import { MongooseModule } from "@nestjs/mongoose";
-import { PrometheusModule } from "@willsoto/nestjs-prometheus";
+import { PrometheusModule, makeCounterProvider, makeHistogramProvider } from "@willsoto/nestjs-prometheus";
 
 @Module({
   imports: [
     JwtModule.register({}),
     MongooseModule.forRoot(process.env.MONGO_URI),
-    /*PrometheusModule.register({
-      controller: GatewayController,
-    }),*/
+    PrometheusModule.register({
+      pushgateway: {
+        url: `http://localhost:${process.env.PORT}`,
+      },
+    }),
     AuthModule,
     UserModule,
     CommentModule,
