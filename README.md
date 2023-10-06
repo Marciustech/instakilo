@@ -31,7 +31,7 @@
     <li>Quick Start:</li>
   </ol>
   
-  <pre><code>yarn run quickstart</code></pre>
+  <pre><code>yarn run quickstart && yarn run start:dev</code></pre>
   
   <h3>🚀 Usage</h3>
 
