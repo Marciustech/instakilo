@@ -181,7 +181,7 @@ export class AuthService {
     }
   }
 
-  private hashData(data: string): Promise<string> {
+  private async hashData(data: string): Promise<string> {
     const options = {
       timeCost: 3,
       memoryCost: 65536,
@@ -189,10 +189,19 @@ export class AuthService {
       type: argon.argon2i,
       hashLength: 32,
     };
-    return argon.hash(data, options);
+
+    return await argon.hash(data, options);
   }
 
-  private verifyHash(password: string, passwordHash: string): Promise<boolean> {
-    return argon.verify(password, passwordHash);
+  private async verifyHash(password: string, passwordHash: string): Promise<boolean> {
+  const options = {
+      timeCost: 3,
+      memoryCost: 65536,
+      parallelism: 2,
+      type: argon.argon2i,
+      hashLength: 32,
+    };
+
+    return await argon.verify(passwordHash, password, options);
   }
 }
