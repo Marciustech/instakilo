@@ -8,7 +8,6 @@ export const User = createParamDecorator(
       const request: Request = ctx.switchToHttp().getRequest();
       const user = request.user;
       const userResponse = data ? user?.[data] : user;
-      console.log(userResponse);
       return userResponse;
     }
     if (ctx.getType() === "ws") {

@@ -13,6 +13,14 @@ import * as argon from "argon2";
 
 @Injectable()
 export class AuthService {
+  private hash_options = {
+    timeCost: 3,
+    memoryCost: 65536,
+    parallelism: 2,
+    type: argon.argon2i,
+    hashLength: 32,
+  };
+  
   constructor(
     private userPrisma: UserPrismaService,
     private jwt: JwtService,
@@ -182,26 +190,13 @@ export class AuthService {
   }
 
   private async hashData(data: string): Promise<string> {
-    const options = {
-      timeCost: 3,
-      memoryCost: 65536,
-      parallelism: 2,
-      type: argon.argon2i,
-      hashLength: 32,
-    };
-
-    return await argon.hash(data, options);
+    return await argon.hash(data, this.hash_options);
   }
 
-  private async verifyHash(password: string, passwordHash: string): Promise<boolean> {
-  const options = {
-      timeCost: 3,
-      memoryCost: 65536,
-      parallelism: 2,
-      type: argon.argon2i,
-      hashLength: 32,
-    };
-
-    return await argon.verify(passwordHash, password, options);
+  private async verifyHash(
+    password: string,
+    passwordHash: string,
+  ): Promise<boolean> {
+    return await argon.verify(passwordHash, password, this.hash_options);
   }
 }

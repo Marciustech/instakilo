@@ -10,6 +10,8 @@ import {
   Put,
   UseGuards,
   Req,
+  Inject,
+  OnModuleInit,
 } from "@nestjs/common";
 import { Request } from "express";
 import {
@@ -23,9 +25,9 @@ import {
   CreateCommentDto,
 } from "./dto/index";
 import { User, AtGuard, RtGuard } from "src/common/index";
-import { AuthService } from "src/common/auth/auth.service";
+//import { AuthService } from "src/common/auth/auth.service";
 import {
-  UserService,
+  //UserService,
   CommentService,
   LikesService,
   ChatService,
@@ -39,14 +41,18 @@ import {
   ApiParam,
   ApiTags,
 } from "@nestjs/swagger";
+import { ClientProxy } from "@nestjs/microservices";
 @ApiTags("API")
 @Controller()
-export class GatewayController {
+export class GatewayController implements OnModuleInit {
   private readonly postServiceClient: ApolloClient<unknown>;
 
+  userService: any;
+  authService: any;
   constructor(
-    private authService: AuthService,
-    private userService: UserService,
+    @Inject("USER_SERVICE") private readonly userClient: ClientProxy,
+    //private authService: AuthService,
+    //private userService: UserService,
     private commentService: CommentService,
     private likesService: LikesService,
     private chatService: ChatService,
@@ -57,6 +63,11 @@ export class GatewayController {
     });
   }
 
+  async onModuleInit() {
+    await this.userClient.connect();
+    console.log("Nats connected!");
+  }
+
   @Post("signup")
   @HttpCode(HttpStatus.CREATED)
   @ApiCreatedResponse({
@@ -64,7 +75,9 @@ export class GatewayController {
   })
   @ApiForbiddenResponse({ description: "Username or email already exist" })
   async signup(@Body() dto: RegistrationDto) {
-    return this.authService.signup(dto);
+    //const signup_response = await this.authService.signup(dto);
+    const userClient = this.userClient.emit<RegistrationDto>("signup", dto).subscribe();
+    return userClient
   }
 
   @Post("login")

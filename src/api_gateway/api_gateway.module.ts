@@ -3,7 +3,7 @@ import { AuthService } from "src/common/auth/auth.service";
 import { GatewayController } from "./api_gateway.controller";
 import { JwtModule } from "@nestjs/jwt";
 import {
-  UserService,
+  //UserService,
   PostModule,
   CommentService,
   LikesService,
@@ -13,12 +13,15 @@ import {
   CommentModule,
   FeedModule,
   LikesModule,
-  UserModule,
+  //UserModule,
 } from "../modules/index";
 import { ApiGatewayService } from "./api_gateway.service";
 import { AuthModule } from "src/common/auth/auth.module";
 import { MongooseModule } from "@nestjs/mongoose";
-import { PrometheusModule, makeCounterProvider, makeHistogramProvider } from "@willsoto/nestjs-prometheus";
+import {
+  PrometheusModule,
+} from "@willsoto/nestjs-prometheus";
+import { ClientsModule, Transport } from "@nestjs/microservices";
 
 @Module({
   imports: [
@@ -29,8 +32,21 @@ import { PrometheusModule, makeCounterProvider, makeHistogramProvider } from "@w
         url: `http://localhost:${process.env.PORT}`,
       },
     }),
-    AuthModule,
-    UserModule,
+    ClientsModule.register([
+      {
+        name: 'USER_SERVICE',
+        transport: Transport.NATS,
+        options: {
+          servers: ['nats://localhost:4222'],
+          queue: "user_queue",
+          queueOptions: {
+            durable: false,
+          },
+        }
+      },
+    ]),
+    //AuthModule,
+    //UserModule,
     CommentModule,
     FeedModule,
     LikesModule,
@@ -39,8 +55,8 @@ import { PrometheusModule, makeCounterProvider, makeHistogramProvider } from "@w
   ],
   controllers: [GatewayController],
   providers: [
-    AuthService,
-    UserService,
+    //AuthService,
+    //UserService,
     CommentService,
     LikesService,
     ApiGatewayService,
