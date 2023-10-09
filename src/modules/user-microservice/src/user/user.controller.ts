@@ -1,15 +1,14 @@
 import { Controller } from "@nestjs/common";
-import { EventPattern, Payload, Ctx, NatsContext } from "@nestjs/microservices";
+import { Ctx, MessagePattern, NatsContext, Payload } from "@nestjs/microservices";
 
 @Controller()
 export class UserController {
     constructor(){}
 
-    @EventPattern("signup")
-    signup_message(@Payload() data: any, @Ctx() context: NatsContext) {
+    @MessagePattern("signup")
+    async signup_message(@Payload() data: any, @Ctx() ctx: NatsContext): Promise<any> {
     console.log("[user service]:");
-    console.log(context.getSubject());
     console.log(data);
-    return "successful";
+    return ctx.getSubject();
   }
 }

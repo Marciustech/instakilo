@@ -12,6 +12,7 @@ import {
   Req,
   Inject,
   OnModuleInit,
+  OnModuleDestroy,
 } from "@nestjs/common";
 import { Request } from "express";
 import {
@@ -41,14 +42,16 @@ import {
   ApiParam,
   ApiTags,
 } from "@nestjs/swagger";
-import { ClientNats, ClientTCP } from "@nestjs/microservices";
+import { ClientNats } from "@nestjs/microservices";
+import { NatsConnectionImpl } from "nats/lib/nats-base-client/nats";
 @ApiTags("API")
 @Controller()
-export class GatewayController implements OnModuleInit {
+export class GatewayController implements OnModuleInit, OnModuleDestroy {
   private readonly postServiceClient: ApolloClient<unknown>;
 
   userService: any;
   authService: any;
+  nats_connection: NatsConnectionImpl;
   constructor(
     @Inject("USER_SERVICE") private readonly userClient: ClientNats,
     //private authService: AuthService,
@@ -64,8 +67,13 @@ export class GatewayController implements OnModuleInit {
   }
 
   async onModuleInit() {
-    await this.userClient.connect();
+    this.nats_connection = await this.userClient.connect();
     console.log("TPC client connected!");
+  }
+
+  async onModuleDestroy() {
+    await this.nats_connection.close();
+    console.log("TPC client disconnected!");
   }
 
   @Post("signup")
@@ -76,8 +84,11 @@ export class GatewayController implements OnModuleInit {
   @ApiForbiddenResponse({ description: "Username or email already exist" })
   async signup(@Body() dto: RegistrationDto) {
     //const signup_response = await this.authService.signup(dto);
-    const userClient = this.userClient.emit<any, RegistrationDto>("signup", dto);
-    return userClient.subscribe()
+    const { reply } = await this.nats_connection.request(
+      "signup",
+      JSON.stringify(dto)
+    );
+    return reply;
   }
 
   @Post("login")
