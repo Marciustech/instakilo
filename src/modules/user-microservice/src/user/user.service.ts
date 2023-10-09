@@ -11,19 +11,11 @@ import {
 } from "../dto/user-dto/index";
 import { IUser, IUserAndFollowing, followOrUnfollow } from "../types/index";
 import { UserPrismaService } from "../user-prisma/user-prisma.service";
-import { Ctx, EventPattern, Payload, NatsContext, MessagePattern } from "@nestjs/microservices";
+import { Ctx, EventPattern, Payload, TcpContext, MessagePattern , MessageHandler} from "@nestjs/microservices";
 
 @Injectable()
 export class UserService {
   constructor(private userPrisma: UserPrismaService) {}
-
-  @EventPattern("signup")
-  signup_message(@Payload() data: any, @Ctx() context: NatsContext) {
-    console.log("[user service]:");
-    console.log(context.getSubject());
-    console.log(data);
-    return context;
-  }
 
   private async checkIfUserAlreadyFollows(
     follower: FollowUserDto,

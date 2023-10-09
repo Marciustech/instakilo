@@ -41,7 +41,7 @@ import {
   ApiParam,
   ApiTags,
 } from "@nestjs/swagger";
-import { ClientProxy } from "@nestjs/microservices";
+import { ClientNats, ClientTCP } from "@nestjs/microservices";
 @ApiTags("API")
 @Controller()
 export class GatewayController implements OnModuleInit {
@@ -50,7 +50,7 @@ export class GatewayController implements OnModuleInit {
   userService: any;
   authService: any;
   constructor(
-    @Inject("USER_SERVICE") private readonly userClient: ClientProxy,
+    @Inject("USER_SERVICE") private readonly userClient: ClientNats,
     //private authService: AuthService,
     //private userService: UserService,
     private commentService: CommentService,
@@ -65,7 +65,7 @@ export class GatewayController implements OnModuleInit {
 
   async onModuleInit() {
     await this.userClient.connect();
-    console.log("Nats connected!");
+    console.log("TPC client connected!");
   }
 
   @Post("signup")
@@ -76,8 +76,8 @@ export class GatewayController implements OnModuleInit {
   @ApiForbiddenResponse({ description: "Username or email already exist" })
   async signup(@Body() dto: RegistrationDto) {
     //const signup_response = await this.authService.signup(dto);
-    const userClient = this.userClient.emit<RegistrationDto>("signup", dto).subscribe();
-    return userClient
+    const userClient = this.userClient.emit<any, RegistrationDto>("signup", dto);
+    return userClient.subscribe()
   }
 
   @Post("login")
