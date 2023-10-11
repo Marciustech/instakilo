@@ -5,13 +5,10 @@ import { MicroserviceOptions, Transport } from '@nestjs/microservices';
 async function bootstrap() {
   const app = await NestFactory.createMicroservice<MicroserviceOptions>(AppModule,
     {
-        transport: Transport.NATS,
-        options: {
-          servers: ['nats://localhost:4222'],
-          queue: 'user_queue',
-          queueOptions: {
-            durable: false,
-          },
+      transport: Transport.TCP,
+      options: {
+        host: "0.0.0.0",
+        port: 8080
         }
       }
   );

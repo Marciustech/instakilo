@@ -21,7 +21,7 @@ import { MongooseModule } from "@nestjs/mongoose";
 import {
   PrometheusModule,
 } from "@willsoto/nestjs-prometheus";
-import { ClientsModule, Transport } from "@nestjs/microservices";
+import { ClientProxyFactory, ClientsModule, Transport } from "@nestjs/microservices";
 
 @Module({
   imports: [
@@ -32,19 +32,6 @@ import { ClientsModule, Transport } from "@nestjs/microservices";
         url: `http://localhost:${process.env.PORT}`,
       },
     }),
-    ClientsModule.register([
-      {
-        name: 'USER_SERVICE',
-        transport: Transport.NATS,
-        options: {
-          servers: ['nats://localhost:4222'],
-          queue: "user_queue",
-          queueOptions: {
-            durable: false,
-          },
-        }
-      },
-    ]),
     //AuthModule,
     //UserModule,
     CommentModule,
@@ -55,6 +42,17 @@ import { ClientsModule, Transport } from "@nestjs/microservices";
   ],
   controllers: [GatewayController],
   providers: [
+    {
+      provide: 'USER_SERVICE',
+      useFactory: () =>
+        ClientProxyFactory.create({
+          transport: Transport.TCP,
+          options: {
+            host: "0.0.0.0",
+            port: 8080,
+          },
+        }),
+    },
     //AuthService,
     //UserService,
     CommentService,
