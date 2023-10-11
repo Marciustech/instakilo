@@ -5,10 +5,13 @@ import { RegistrationDto } from "../dto/auth-dto";
 
 @Controller()
 export class UserController {
-    constructor(private userService: UserService){}
+  constructor(private userService: UserService) {}
 
-    @MessagePattern("signup")
-    async signup_message(@Payload() data: RegistrationDto): Promise<any> {
-    return this.userService;
+  @MessagePattern("signup")
+  async signup_message(@Payload() data: RegistrationDto): Promise<any> {
+    return this.userService.createUser(data);
   }
+
+  @MessagePattern("login")
+  async login_message() {}
 }

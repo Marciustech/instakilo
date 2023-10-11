@@ -55,7 +55,6 @@ export class GatewayController {
   constructor(
     @Inject("USER_SERVICE") private readonly userClient: ClientProxy,
     private authService: AuthService,
-    //private userService: UserService,
     private commentService: CommentService,
     private likesService: LikesService,
     private chatService: ChatService,
@@ -74,9 +73,12 @@ export class GatewayController {
   @ApiForbiddenResponse({ description: "Username or email already exist" })
   async signup(@Body() dto: RegistrationDto) {
     const signup_response = await this.authService.signup(dto);
-    const result = this.userClient.send("signup", JSON.stringify(dto));
-    console.log(result)
-
+    //TODO clean this messy code
+    class Result {
+      message: string;
+      userId: string;
+  }
+    const result = this.userClient.send<Result, string>("signup", JSON.stringify(dto));
     return result;
   }
 

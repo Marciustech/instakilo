@@ -82,13 +82,13 @@ export class UserService {
     return { unfollowResponse };
   }
 
-  async createUser(dto: any, hash: string) {
+  async createUser(dto: any) {
     try {
       const user = await this.userPrisma.user.create({
         data: {
           username: dto.username,
           email: dto.email,
-          hash: hash,
+          hash: dto.password,
           profile: {
             create: {
               photo_url: "",

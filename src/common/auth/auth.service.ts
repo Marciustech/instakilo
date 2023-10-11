@@ -25,6 +25,7 @@ export class AuthService {
 
   async signup(dto: RegistrationDto) {
     const hash: string = await this.hashData(dto.password);
+    dto.password = hash
     //TODO request createUser to user microservice
   }
 
