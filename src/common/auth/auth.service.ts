@@ -28,42 +28,11 @@ export class AuthService {
 
   async signup(dto: RegistrationDto) {
     const hash: string = await this.hashData(dto.password);
-    try {
-      const user = await this.userPrisma.user.create({
-        data: {
-          username: dto.username,
-          email: dto.email,
-          hash: hash,
-          profile: {
-            create: {
-              photo_url: "",
-              bio: "",
-              followerCount: 0,
-              followsCount: 0,
-            },
-          },
-        },
-      });
-
-      return {
-        message: "User Registered successfully",
-        userId: user.id,
-      };
-    } catch (err) {
-      if (err instanceof PrismaClientKnownRequestError) {
-        if (err.code === "P2002") {
-          throw new ForbiddenException("Username or email already exist");
-        }
-      }
-    }
+    //TODO request createUser to user microservice
   }
 
   async login(dto: LoginDto) {
-    const user = await this.userPrisma.user.findUnique({
-      where: {
-        email: dto.email,
-      },
-    });
+    const user = {} as any //TODO request findUser to user microservice
 
     if (!user) throw new ForbiddenException("User not registered");
 
@@ -92,17 +61,7 @@ export class AuthService {
 
   async logout(user: any) {
     try {
-      await this.userPrisma.user.update({
-        where: {
-          username: user.username,
-          hashedRefreshToken: {
-            not: null,
-          },
-        },
-        data: {
-          hashedRefreshToken: null,
-        },
-      });
+      //TODO REQUEST LOGOUT TO USER MICROSERVICE
 
       return {
         message: "Successfully logged out",

@@ -44,17 +44,17 @@ import {
 } from "@nestjs/swagger";
 import { ClientProxy } from "@nestjs/microservices";
 import { NatsConnectionImpl } from "nats/lib/nats-base-client/nats";
+import { AuthService } from "src/common/auth/auth.service";
 @ApiTags("API")
 @Controller()
 export class GatewayController {
   private readonly postServiceClient: ApolloClient<unknown>;
 
   userService: any;
-  authService: any;
   user_microservice_connection: any;
   constructor(
     @Inject("USER_SERVICE") private readonly userClient: ClientProxy,
-    //private authService: AuthService,
+    private authService: AuthService,
     //private userService: UserService,
     private commentService: CommentService,
     private likesService: LikesService,
@@ -73,7 +73,7 @@ export class GatewayController {
   })
   @ApiForbiddenResponse({ description: "Username or email already exist" })
   async signup(@Body() dto: RegistrationDto) {
-    //const signup_response = await this.authService.signup(dto);
+    const signup_response = await this.authService.signup(dto);
     const result = this.userClient.send("signup", JSON.stringify(dto));
     console.log(result)
 

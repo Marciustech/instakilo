@@ -12,10 +12,13 @@ import {
 import { IUser, IUserAndFollowing, followOrUnfollow } from "../types/index";
 import { UserPrismaService } from "../user-prisma/user-prisma.service";
 import { Ctx, EventPattern, Payload, TcpContext, MessagePattern , MessageHandler} from "@nestjs/microservices";
+import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
 
 @Injectable()
 export class UserService {
   constructor(private userPrisma: UserPrismaService) {}
+
+  
 
   private async checkIfUserAlreadyFollows(
     follower: FollowUserDto,
@@ -76,6 +79,59 @@ export class UserService {
     });
 
     return { unfollowResponse };
+  }
+
+  async createUser(dto: any, hash: string) {
+    try {
+      const user = await this.userPrisma.user.create({
+        data: {
+          username: dto.username,
+          email: dto.email,
+          hash: hash,
+          profile: {
+            create: {
+              photo_url: "",
+              bio: "",
+              followerCount: 0,
+              followsCount: 0,
+            },
+          },
+        },
+      });
+
+      return {
+        message: "User Registered successfully",
+        userId: user.id,
+      };
+    } catch (err) {
+      if (err instanceof PrismaClientKnownRequestError) {
+        if (err.code === "P2002") {
+          throw new ForbiddenException("Username or email already exist");
+        }
+      }
+    }
+  }
+
+  async findOneUser(dto: any){
+    await this.userPrisma.user.findUnique({
+      where: {
+        email: dto.email,
+      },
+    });
+  }
+
+  async logout (user: any){
+    return await this.userPrisma.user.update({
+      where: {
+        username: user.username,
+        hashedRefreshToken: {
+          not: null,
+        },
+      },
+      data: {
+        hashedRefreshToken: null,
+      },
+    });
   }
 
   async follow(follower: any, userToFollowReq: FollowUserDto) {

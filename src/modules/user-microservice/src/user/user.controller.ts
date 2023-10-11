@@ -1,14 +1,14 @@
 import { Controller } from "@nestjs/common";
-import { Ctx, MessagePattern, Payload, TcpContext } from "@nestjs/microservices";
+import { MessagePattern, Payload } from "@nestjs/microservices";
+import { UserService } from "./user.service";
+import { RegistrationDto } from "../dto/auth-dto";
 
 @Controller()
 export class UserController {
-    constructor(){}
+    constructor(private userService: UserService){}
 
     @MessagePattern("signup")
-    async signup_message(@Payload() data: any, @Ctx() ctx: TcpContext): Promise<any> {
-    console.log("[user service]:");
-    console.log(data);
-    return data;
+    async signup_message(@Payload() data: RegistrationDto): Promise<any> {
+    return this.userService;
   }
 }
