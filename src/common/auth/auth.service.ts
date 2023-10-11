@@ -4,8 +4,6 @@ import {
   Injectable,
   BadRequestException,
 } from "@nestjs/common";
-import { UserPrismaService } from "../../modules/user/user-prisma/user-prisma.service";
-import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
 import { JwtService, JwtSignOptions } from "@nestjs/jwt";
 import { TokenPayload, Tokens } from "./types";
 import { RegistrationDto, LoginDto } from "../../api_gateway/dto/index";
@@ -22,7 +20,6 @@ export class AuthService {
   };
   
   constructor(
-    private userPrisma: UserPrismaService,
     private jwt: JwtService,
   ) {}
 
@@ -98,28 +95,12 @@ export class AuthService {
   }
 
   async storeRefreshToken(id: string, refreshToken: string): Promise<void> {
-    try {
-      const hashedRefreshToken = await this.hashData(refreshToken);
-      await this.userPrisma.user.update({
-        where: {
-          id,
-        },
-        data: {
-          hashedRefreshToken,
-        },
-      });
-    } catch (error) {
-      throw new InternalServerErrorException();
-    }
+    //TODO request user microservice to store RT
   }
 
   async refreshToken(dto: any) {
     try {
-      const user = await this.userPrisma.user.findUnique({
-        where: {
-          id: dto.uuid,
-        },
-      });
+      const user = {} as any //TODO request find one user
 
       if (!user) throw new ForbiddenException("No User Found");
 

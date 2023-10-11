@@ -2,6 +2,7 @@ import {
   BadRequestException,
   ForbiddenException,
   Injectable,
+  InternalServerErrorException,
   NotFoundException,
 } from "@nestjs/common";
 import {
@@ -132,6 +133,22 @@ export class UserService {
         hashedRefreshToken: null,
       },
     });
+  }
+
+  async storeRefreshToken(id: string, hash: string){
+    try {
+      const hashedRefreshToken = hash
+      await this.userPrisma.user.update({
+        where: {
+          id,
+        },
+        data: {
+          hashedRefreshToken,
+        },
+      });
+    } catch (error) {
+      throw new InternalServerErrorException();
+    }
   }
 
   async follow(follower: any, userToFollowReq: FollowUserDto) {
