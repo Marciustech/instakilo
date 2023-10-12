@@ -12,6 +12,8 @@ export class UserController {
     return this.userService.createUser(data);
   }
 
-  @MessagePattern("login")
-  async login_message() {}
+  @MessagePattern("findUser")
+  async login_message(@Payload() data: any) {
+    return this.userService.findOneUser(data)
+  }
 }

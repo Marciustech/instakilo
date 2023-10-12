@@ -23,15 +23,13 @@ export class AuthService {
     private jwt: JwtService,
   ) {}
 
-  async signup(dto: RegistrationDto) {
+  async signup(dto: RegistrationDto): Promise<RegistrationDto> {
     const hash: string = await this.hashData(dto.password);
     dto.password = hash
-    //TODO request createUser to user microservice
+    return dto
   }
 
-  async login(dto: LoginDto) {
-    const user = {} as any //TODO request findUser to user microservice
-
+  async login(dto: LoginDto, user: any) {
     if (!user) throw new ForbiddenException("User not registered");
 
     const passwordMatch = await this.verifyHash(dto.password, user.hash);
@@ -54,19 +52,6 @@ export class AuthService {
       };
     } catch (error) {
       console.log(error);
-    }
-  }
-
-  async logout(user: any) {
-    try {
-      //TODO REQUEST LOGOUT TO USER MICROSERVICE
-
-      return {
-        message: "Successfully logged out",
-      };
-    } catch (error) {
-      if (error.code == "P2025")
-        throw new BadRequestException("User already Logged out");
     }
   }
 

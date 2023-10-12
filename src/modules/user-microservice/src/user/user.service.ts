@@ -9,6 +9,7 @@ import {
   FollowUserDto,
   LoggedUserDto,
   ProfileUpdateDto,
+  UniqueUser,
 } from "../dto/user-dto/index";
 import { IUser, IUserAndFollowing, followOrUnfollow } from "../types/index";
 import { UserPrismaService } from "../user-prisma/user-prisma.service";
@@ -113,8 +114,8 @@ export class UserService {
     }
   }
 
-  async findOneUser(dto: any){
-    await this.userPrisma.user.findUnique({
+  async findOneUser(dto: any): Promise<UniqueUser>{
+    return await this.userPrisma.user.findUnique({
       where: {
         email: dto.email,
       },

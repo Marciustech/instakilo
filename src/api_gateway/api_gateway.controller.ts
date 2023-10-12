@@ -24,6 +24,8 @@ import {
   LikeCommentDto,
   LikePostDto,
   CreateCommentDto,
+  SignUpResponseDto,
+  UniqueUserResponse,
 } from "./dto/index";
 import { User, AtGuard, RtGuard } from "src/common/index";
 //import { AuthService } from "src/common/auth/auth.service";
@@ -73,12 +75,7 @@ export class GatewayController {
   @ApiForbiddenResponse({ description: "Username or email already exist" })
   async signup(@Body() dto: RegistrationDto) {
     const signup_response = await this.authService.signup(dto);
-    //TODO clean this messy code
-    class Result {
-      message: string;
-      userId: string;
-  }
-    const result = this.userClient.send<Result, string>("signup", JSON.stringify(dto));
+    const result = this.userClient.send<SignUpResponseDto, string>("signup", JSON.stringify(signup_response));
     return result;
   }
 
@@ -89,7 +86,8 @@ export class GatewayController {
     description: "User not registered/Invalid password",
   })
   async login(@Body() dto: LoginDto) {
-    return this.authService.login(dto);
+    const user = this.userClient.send<UniqueUserResponse, string>("findUser", JSON.stringify(dto))
+    return this.authService.login(dto, user);
   }
 
   @UseGuards(AtGuard)
@@ -99,7 +97,7 @@ export class GatewayController {
   @ApiOkResponse({ description: "Successfully logged out" })
   @ApiBadRequestResponse({ description: "User already Logged out" })
   async logout(@User() user: any) {
-    return this.authService.logout(user);
+    return this.userClient.send<any , string>("logout", JSON.stringify(user));
   }
 
   @UseGuards(RtGuard)
