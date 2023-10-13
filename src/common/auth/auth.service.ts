@@ -3,11 +3,14 @@ import {
   InternalServerErrorException,
   Injectable,
   BadRequestException,
+  Inject,
 } from "@nestjs/common";
 import { JwtService, JwtSignOptions } from "@nestjs/jwt";
 import { TokenPayload, Tokens } from "./types";
-import { RegistrationDto, LoginDto } from "../../api_gateway/dto/index";
+import { RegistrationDto, LoginDto, UniqueUserResponse } from "../../api_gateway/dto/index";
 import * as argon from "argon2";
+import { ClientProxy } from "@nestjs/microservices/client";
+import { isObservable } from "rxjs/internal/util/isObservable";
 
 @Injectable()
 export class AuthService {
@@ -18,18 +21,22 @@ export class AuthService {
     type: argon.argon2i,
     hashLength: 32,
   };
-  
-  constructor(
-    private jwt: JwtService,
-  ) {}
+
+  constructor(private jwt: JwtService, @Inject("USER_SERVICE") private readonly userClient: ClientProxy) {}
 
   async signup(dto: RegistrationDto): Promise<RegistrationDto> {
     const hash: string = await this.hashData(dto.password);
-    dto.password = hash
-    return dto
+    dto.password = hash;
+    return dto;
   }
 
-  async login(dto: LoginDto, user: any) {
+  async login(dto: LoginDto) {
+    const user = (await (this.observableToPromise(this.userClient.send<UniqueUserResponse, string>(
+      "findUser",
+      JSON.stringify(dto),
+    )) as Promise<UniqueUserResponse[]>))[0];
+    console.log(user)
+
     if (!user) throw new ForbiddenException("User not registered");
 
     const passwordMatch = await this.verifyHash(dto.password, user.hash);
@@ -81,15 +88,14 @@ export class AuthService {
   }
 
   async storeRefreshToken(id: string, refreshToken: string): Promise<void> {
-    //TODO request user microservice to store RT
+    this.userClient.send<any, string>("store_refresh_token", JSON.stringify({
+      id,
+      hashRT: refreshToken
+    }))
   }
 
-  async refreshToken(dto: any) {
+  async refreshToken(dto: any, user: any) {
     try {
-      const user = {} as any //TODO request find one user
-
-      if (!user) throw new ForbiddenException("No User Found");
-
       const refresh_token_matches = this.verifyHash(
         dto.refreshToken,
         user.hashedRefreshToken,
@@ -123,6 +129,31 @@ export class AuthService {
     password: string,
     passwordHash: string,
   ): Promise<boolean> {
-    return await argon.verify(passwordHash, password, this.hash_options);
+  try {
+    const isMatch = await argon.verify(passwordHash, password, this.hash_options);
+    return  isMatch
+  } catch (error) {
+    throw new InternalServerErrorException(error.message)
   }
+    
+  }
+
+  private observableToPromise(value) {
+    if (!isObservable(value)) {
+      throw new TypeError(`Expected an \`Observable\`, got \`${typeof value}\``);
+    }
+  
+    const values = [];
+  
+    return new Promise((resolve, reject) => {
+      value.subscribe({
+        next(value) {
+          values.push(value);
+        },
+        error: reject,
+        complete() {
+          resolve(values);
+        },
+      });
+    });}
 }

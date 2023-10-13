@@ -3,7 +3,6 @@ import { AuthService } from "src/common/auth/auth.service";
 import { GatewayController } from "./api_gateway.controller";
 import { JwtModule } from "@nestjs/jwt";
 import {
-  //UserService,
   PostModule,
   CommentService,
   LikesService,
@@ -13,37 +12,39 @@ import {
   CommentModule,
   FeedModule,
   LikesModule,
-  //UserModule,
 } from "../modules/index";
 import { ApiGatewayService } from "./api_gateway.service";
 import { AuthModule } from "src/common/auth/auth.module";
 import { MongooseModule } from "@nestjs/mongoose";
+import { PrometheusModule } from "@willsoto/nestjs-prometheus";
 import {
-  PrometheusModule,
-} from "@willsoto/nestjs-prometheus";
-import { ClientProxyFactory, ClientsModule, Transport } from "@nestjs/microservices";
+  ClientProxyFactory,
+  ClientsModule,
+  Transport,
+} from "@nestjs/microservices";
 
 @Module({
   imports: [
     JwtModule.register({}),
-    MongooseModule.forRoot(process.env.MONGO_URI),
+    MongooseModule.forRoot(
+      process.env.MONGO_URL || "mongodb://localhost:27017",
+    ),
     PrometheusModule.register({
       pushgateway: {
         url: `http://localhost:${process.env.PORT}`,
       },
     }),
-    //AuthModule,
-    //UserModule,
-    CommentModule,
-    FeedModule,
-    LikesModule,
-    PostModule,
-    ChatModule,
+    AuthModule,
+    //CommentModule,
+    //FeedModule,
+    //LikesModule,
+    //PostModule,
+    //ChatModule,
   ],
   controllers: [GatewayController],
   providers: [
     {
-      provide: 'USER_SERVICE',
+      provide: "USER_SERVICE",
       useFactory: () =>
         ClientProxyFactory.create({
           transport: Transport.TCP,
@@ -53,13 +54,12 @@ import { ClientProxyFactory, ClientsModule, Transport } from "@nestjs/microservi
           },
         }),
     },
-    //AuthService,
-    //UserService,
-    CommentService,
-    LikesService,
-    ApiGatewayService,
-    ChatService,
-    ChatDatabaseService,
+    AuthService,
+    //CommentService,
+    //LikesService,
+    //ApiGatewayService,
+    //ChatService,
+    //ChatDatabaseService,
   ],
 })
 export class ApiGatewayModule {}

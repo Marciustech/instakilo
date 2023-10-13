@@ -21,9 +21,8 @@ yarn install || throw_error "Failed to install dependencies"
 # Start Docker
 docker compose up -d || throw_error "Failed to start Docker Compose"
 
-# Generate Prisma and deploy Prisma migrations
-yarn prisma generate --schema=./src/modules/user/prisma/schema.prisma || throw_error "Failed to generate Prisma client"
-yarn prisma migrate deploy --schema=./src/modules/user/prisma/schema.prisma || throw_error "Failed to deploy Prisma migrations"
-
 # Build the project
 yarn run build || throw_error "Failed to build the project"
+
+# Build the project
+nest build || throw_error "Failed to build the project"

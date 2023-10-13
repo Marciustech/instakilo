@@ -1,4 +1,4 @@
 export class SignUpResponseDto {
-    message: string;
-    userId: string;
+  message: string;
+  userId: string;
 }

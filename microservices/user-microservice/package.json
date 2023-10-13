@@ -26,7 +26,7 @@
     "@nestjs/microservices": "^10.2.4",
     "@nestjs/passport": "^10.0.0",
     "@nestjs/platform-express": "^10.0.0",
-    "@prisma/client": "^5.1.1",
+    "@prisma/client": "5.4.2",
     "amqp-connection-manager": "^4.1.14",
     "amqplib": "^0.10.3",
     "argon2": "^0.31.1",

@@ -13,6 +13,7 @@ import {
   Inject,
   OnModuleInit,
   OnModuleDestroy,
+  ForbiddenException,
 } from "@nestjs/common";
 import { Request } from "express";
 import {
@@ -54,13 +55,16 @@ export class GatewayController {
 
   userService: any;
   user_microservice_connection: any;
+  commentService: any;
+  likesService: any;
+  chatService: any;
   constructor(
     @Inject("USER_SERVICE") private readonly userClient: ClientProxy,
     private authService: AuthService,
-    private commentService: CommentService,
-    private likesService: LikesService,
-    private chatService: ChatService,
-  ) {
+  ) //private commentService: CommentService,
+  //private likesService: LikesService,
+  //private chatService: ChatService,
+  {
     this.postServiceClient = new ApolloClient({
       uri: process.env.GRAPHQL_URL,
       cache: new InMemoryCache(),
@@ -75,7 +79,10 @@ export class GatewayController {
   @ApiForbiddenResponse({ description: "Username or email already exist" })
   async signup(@Body() dto: RegistrationDto) {
     const signup_response = await this.authService.signup(dto);
-    const result = this.userClient.send<SignUpResponseDto, string>("signup", JSON.stringify(signup_response));
+    const result = this.userClient.send<SignUpResponseDto, string>(
+      "signup",
+      JSON.stringify(signup_response),
+    );
     return result;
   }
 
@@ -86,8 +93,7 @@ export class GatewayController {
     description: "User not registered/Invalid password",
   })
   async login(@Body() dto: LoginDto) {
-    const user = this.userClient.send<UniqueUserResponse, string>("findUser", JSON.stringify(dto))
-    return this.authService.login(dto, user);
+    return this.authService.login(dto);
   }
 
   @UseGuards(AtGuard)
@@ -97,7 +103,7 @@ export class GatewayController {
   @ApiOkResponse({ description: "Successfully logged out" })
   @ApiBadRequestResponse({ description: "User already Logged out" })
   async logout(@User() user: any) {
-    return this.userClient.send<any , string>("logout", JSON.stringify(user));
+    return this.userClient.send<any, string>("logout", JSON.stringify(user));
   }
 
   @UseGuards(RtGuard)
@@ -106,7 +112,15 @@ export class GatewayController {
   @ApiOkResponse({ description: "Refreshed Tokens successfully" })
   @ApiForbiddenResponse({ description: "No User Found or Access denied" })
   refresh(@User() user: any) {
-    return this.authService.refreshToken(user);
+    const user_res = this.userClient.send<any, string>(
+      "findUser",
+      JSON.stringify(user),
+    );
+    if (!user_res) throw new ForbiddenException("No User Found");
+    const response = this.authService.refreshToken(user, user_res);
+    const message: string = JSON.stringify({ ...response, userId: user.id });
+    this.userClient.send("store_refresh_token", message);
+    return response;
   }
 
   @UseGuards(AtGuard)

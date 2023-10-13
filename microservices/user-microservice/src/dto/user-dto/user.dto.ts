@@ -1,4 +1,4 @@
-export class UniqueUserResponse {
+export class UniqueUser {
   id: string;
   username: string;
   email: string;

@@ -13,14 +13,20 @@ import {
 } from "../dto/user-dto/index";
 import { IUser, IUserAndFollowing, followOrUnfollow } from "../types/index";
 import { UserPrismaService } from "../user-prisma/user-prisma.service";
-import { Ctx, EventPattern, Payload, TcpContext, MessagePattern , MessageHandler} from "@nestjs/microservices";
+import {
+  Ctx,
+  EventPattern,
+  Payload,
+  TcpContext,
+  MessagePattern,
+  MessageHandler,
+} from "@nestjs/microservices";
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
+import { RegistrationDto } from "../dto";
 
 @Injectable()
 export class UserService {
   constructor(private userPrisma: UserPrismaService) {}
-
-  
 
   private async checkIfUserAlreadyFollows(
     follower: FollowUserDto,
@@ -83,7 +89,7 @@ export class UserService {
     return { unfollowResponse };
   }
 
-  async createUser(dto: any) {
+  async createUser(dto: RegistrationDto) {
     try {
       const user = await this.userPrisma.user.create({
         data: {
@@ -106,15 +112,18 @@ export class UserService {
         userId: user.id,
       };
     } catch (err) {
+      console.log(err);
       if (err instanceof PrismaClientKnownRequestError) {
         if (err.code === "P2002") {
-          throw new ForbiddenException("Username or email already exist");
+          return "Username or email already exist";
+        } else {
+          return err.message;
         }
       }
     }
   }
 
-  async findOneUser(dto: any): Promise<UniqueUser>{
+  async findOneUser(dto: any): Promise<UniqueUser> {
     return await this.userPrisma.user.findUnique({
       where: {
         email: dto.email,
@@ -122,7 +131,7 @@ export class UserService {
     });
   }
 
-  async logout (user: any){
+  async logout(user: any) {
     return await this.userPrisma.user.update({
       where: {
         username: user.username,
@@ -136,9 +145,9 @@ export class UserService {
     });
   }
 
-  async storeRefreshToken(id: string, hash: string){
+  async storeRefreshToken(id: string, hashedRT: string) {
     try {
-      const hashedRefreshToken = hash
+      const hashedRefreshToken = hashedRT;
       await this.userPrisma.user.update({
         where: {
           id,
