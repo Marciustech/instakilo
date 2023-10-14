@@ -132,9 +132,18 @@ export class UserService {
   }
 
   async logout(user: any) {
-    return await this.userPrisma.user.update({
+    const { username } = await this.userPrisma.user.findFirst({
       where: {
         username: user.username,
+        email: user.email,
+        id: user.uuid,
+      },
+    });
+    if(!username) throw new InternalServerErrorException("unable to find user")
+
+    return await this.userPrisma.user.update({
+      where: {
+        username,
         hashedRefreshToken: {
           not: null,
         },
@@ -157,7 +166,7 @@ export class UserService {
         },
       });
     } catch (error) {
-      throw new InternalServerErrorException();
+      throw new InternalServerErrorException(error.message);
     }
   }
 

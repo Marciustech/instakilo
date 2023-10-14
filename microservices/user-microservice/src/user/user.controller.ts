@@ -25,4 +25,9 @@ export class UserController {
   async store_refresh_token_message(@Payload(JsonParsePipe) data: any) {
     return await this.userService.storeRefreshToken(data.id, data.hashRT);
   }
+
+  @MessagePattern("logout")
+  async logout_message(@Payload(JsonParsePipe) data: any) {
+    return await this.userService.logout(data) != null ? {message: "Successfully logged out"} : {message: "Already logged out"};
+  }
 }

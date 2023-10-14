@@ -35,7 +35,6 @@ export class AuthService {
       "findUser",
       JSON.stringify(dto),
     )) as Promise<UniqueUserResponse[]>))[0];
-    console.log(user)
 
     if (!user) throw new ForbiddenException("User not registered");
 
