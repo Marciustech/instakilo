@@ -112,12 +112,11 @@ export class UserService {
         userId: user.id,
       };
     } catch (err) {
-      console.log(err);
       if (err instanceof PrismaClientKnownRequestError) {
         if (err.code === "P2002") {
-          return "Username or email already exist";
+          return { message: "Username or email already exist", status: 400 };
         } else {
-          return err.message;
+          return { message: err.message, status: 400 };
         }
       }
     }
@@ -132,21 +131,27 @@ export class UserService {
   }
 
   async logout(user: any) {
-    const { username } = await this.userPrisma.user.findFirst({
+    const { username, hashedRefreshToken } =
+      await this.userPrisma.user.findFirst({
+        where: {
+          username: user.username,
+          email: user.email,
+          id: user.uuid,
+        },
+      });
+    if (!username) {
+      throw new InternalServerErrorException("unable to find user");
+    }
+
+    if (hashedRefreshToken === null) {
+      return false;
+    }
+
+    return await this.userPrisma.user.update({
       where: {
         username: user.username,
         email: user.email,
         id: user.uuid,
-      },
-    });
-    if(!username) throw new InternalServerErrorException("unable to find user")
-
-    return await this.userPrisma.user.update({
-      where: {
-        username,
-        hashedRefreshToken: {
-          not: null,
-        },
       },
       data: {
         hashedRefreshToken: null,
@@ -154,10 +159,9 @@ export class UserService {
     });
   }
 
-  async storeRefreshToken(id: string, hashedRT: string) {
+  async storeRefreshToken(id: string, hashedRefreshToken: string) {
     try {
-      const hashedRefreshToken = hashedRT;
-      await this.userPrisma.user.update({
+      return await this.userPrisma.user.update({
         where: {
           id,
         },
@@ -165,6 +169,7 @@ export class UserService {
           hashedRefreshToken,
         },
       });
+      console.log(hashedRefreshToken);
     } catch (error) {
       throw new InternalServerErrorException(error.message);
     }

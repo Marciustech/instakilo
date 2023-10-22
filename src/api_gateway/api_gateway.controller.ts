@@ -11,9 +11,8 @@ import {
   UseGuards,
   Req,
   Inject,
-  OnModuleInit,
-  OnModuleDestroy,
   ForbiddenException,
+  BadRequestException,
 } from "@nestjs/common";
 import { Request } from "express";
 import {
@@ -26,16 +25,8 @@ import {
   LikePostDto,
   CreateCommentDto,
   SignUpResponseDto,
-  UniqueUserResponse,
 } from "./dto/index";
 import { User, AtGuard, RtGuard } from "src/common/index";
-//import { AuthService } from "src/common/auth/auth.service";
-import {
-  //UserService,
-  CommentService,
-  LikesService,
-  ChatService,
-} from "src/modules/index";
 import {
   ApiBadRequestResponse,
   ApiBearerAuth,
@@ -46,8 +37,8 @@ import {
   ApiTags,
 } from "@nestjs/swagger";
 import { ClientProxy } from "@nestjs/microservices";
-import { NatsConnectionImpl } from "nats/lib/nats-base-client/nats";
 import { AuthService } from "src/common/auth/auth.service";
+import { Observable, isObservable } from "rxjs";
 @ApiTags("API")
 @Controller()
 export class GatewayController {
@@ -60,11 +51,8 @@ export class GatewayController {
   chatService: any;
   constructor(
     @Inject("USER_SERVICE") private readonly userClient: ClientProxy,
-    private authService: AuthService,
-  ) //private commentService: CommentService,
-  //private likesService: LikesService,
-  //private chatService: ChatService,
-  {
+    private authService: AuthService, //private chatService: ChatService,
+  ) {
     this.postServiceClient = new ApolloClient({
       uri: process.env.GRAPHQL_URL,
       cache: new InMemoryCache(),
@@ -79,10 +67,16 @@ export class GatewayController {
   @ApiForbiddenResponse({ description: "Username or email already exist" })
   async signup(@Body() dto: RegistrationDto) {
     const signup_response = await this.authService.signup(dto);
-    const result = this.userClient.send<SignUpResponseDto, string>(
-      "signup",
-      JSON.stringify(signup_response),
+    const result = await this.observableToPromise<SignUpResponseDto>(
+      this.userClient.send<SignUpResponseDto, string>(
+        "signup",
+        JSON.stringify(signup_response),
+      ),
     );
+
+    if (result?.status === 400) {
+      throw new BadRequestException(result.message);
+    }
     return result;
   }
 
@@ -111,16 +105,17 @@ export class GatewayController {
   @ApiBearerAuth()
   @ApiOkResponse({ description: "Refreshed Tokens successfully" })
   @ApiForbiddenResponse({ description: "No User Found or Access denied" })
-  refresh(@User() user: any) {
-    const user_res = this.userClient.send<any, string>(
-      "findUser",
-      JSON.stringify(user),
+  async refresh(@User() user: any) {
+    const user_res = await this.observableToPromise(
+      this.userClient.send<any, string>("findUser", JSON.stringify(user)),
     );
     if (!user_res) throw new ForbiddenException("No User Found");
+    console.log(user_res);
     const response = this.authService.refreshToken(user, user_res);
-    const message: string = JSON.stringify({ ...response, userId: user.id });
-    this.userClient.send("store_refresh_token", message);
     return response;
+    //const message: string = JSON.stringify({ ...response, userId: user.id });
+    //this.userClient.send("store_refresh_token", message);
+    //return response;
   }
 
   @UseGuards(AtGuard)
@@ -305,5 +300,31 @@ export class GatewayController {
   @Put("chat/messages/viewed")
   async markMessageAsViewed(@Body() data: any) {
     return await this.chatService.markMessageAsViewed(data);
+  }
+
+  private observableToPromise<T>(value: Observable<unknown>): Promise<T> {
+    if (!isObservable(value)) {
+      throw new TypeError(
+        `Expected an \`Observable\`, got \`${typeof value}\``,
+      );
+    }
+
+    const first_result_observable: any[] = [];
+
+    return new Promise((resolve, reject) => {
+      value.subscribe({
+        next(value) {
+          first_result_observable.push(value);
+        },
+        error: reject,
+        complete() {
+          if (typeof first_result_observable[0] === "string") {
+            resolve(JSON.parse(first_result_observable[0]));
+          } else {
+            resolve(first_result_observable[0]);
+          }
+        },
+      });
+    });
   }
 }

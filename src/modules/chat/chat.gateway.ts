@@ -97,7 +97,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     if (!conversations) {
       return;
     }
-    for (let conversation of conversations) {
+    for (const conversation of conversations) {
       console.log(
         `Connecting user ${userId} to Conversation ${conversation.conversationId}`,
       );
@@ -117,7 +117,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
     const sockets = await this.server.fetchSockets();
     let recipientSocket: any;
-    for (let socket of sockets) {
+    for (const socket of sockets) {
       if (socket.id === recipientSocketId) {
         recipientSocket = socket;
       }

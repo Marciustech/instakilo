@@ -7,7 +7,11 @@ import {
 } from "@nestjs/common";
 import { JwtService, JwtSignOptions } from "@nestjs/jwt";
 import { TokenPayload, Tokens } from "./types";
-import { RegistrationDto, LoginDto, UniqueUserResponse } from "../../api_gateway/dto/index";
+import {
+  RegistrationDto,
+  LoginDto,
+  UniqueUserResponse,
+} from "../../api_gateway/dto/index";
 import * as argon from "argon2";
 import { ClientProxy } from "@nestjs/microservices/client";
 import { isObservable } from "rxjs/internal/util/isObservable";
@@ -22,7 +26,10 @@ export class AuthService {
     hashLength: 32,
   };
 
-  constructor(private jwt: JwtService, @Inject("USER_SERVICE") private readonly userClient: ClientProxy) {}
+  constructor(
+    private jwt: JwtService,
+    @Inject("USER_SERVICE") private readonly userClient: ClientProxy,
+  ) {}
 
   async signup(dto: RegistrationDto): Promise<RegistrationDto> {
     const hash: string = await this.hashData(dto.password);
@@ -31,10 +38,14 @@ export class AuthService {
   }
 
   async login(dto: LoginDto) {
-    const user = (await (this.observableToPromise(this.userClient.send<UniqueUserResponse, string>(
-      "findUser",
-      JSON.stringify(dto),
-    )) as Promise<UniqueUserResponse[]>))[0];
+    const user = (
+      await (this.observableToPromise(
+        this.userClient.send<UniqueUserResponse, string>(
+          "findUser",
+          JSON.stringify(dto),
+        ),
+      ) as Promise<UniqueUserResponse[]>)
+    )[0];
 
     if (!user) throw new ForbiddenException("User not registered");
 
@@ -49,7 +60,9 @@ export class AuthService {
         username: user.username,
       });
 
-      await this.storeRefreshToken(user.id, refreshToken);
+      const hashedRefreshToken = await this.hashData(refreshToken);
+
+      await this.storeRefreshToken(user.id, hashedRefreshToken);
 
       return {
         message: "User access successful",
@@ -87,10 +100,18 @@ export class AuthService {
   }
 
   async storeRefreshToken(id: string, refreshToken: string): Promise<void> {
-    this.userClient.send<any, string>("store_refresh_token", JSON.stringify({
-      id,
-      hashRT: refreshToken
-    }))
+    try {
+      const response = this.userClient.send<any, string>(
+        "store_refresh_token",
+        JSON.stringify({
+          id,
+          hashRT: refreshToken,
+        }),
+      );
+      console.log(await this.observableToPromise(response));
+    } catch (error) {
+      throw new InternalServerErrorException(error);
+    }
   }
 
   async refreshToken(dto: any, user: any) {
@@ -108,7 +129,9 @@ export class AuthService {
         username: user.username,
       });
 
-      await this.storeRefreshToken(user.id, refreshToken);
+      const hashedRefreshToken = await this.hashData(refreshToken);
+
+      await this.storeRefreshToken(user.id, hashedRefreshToken);
 
       return {
         message: "Refreshed Tokens successfully",
@@ -128,22 +151,29 @@ export class AuthService {
     password: string,
     passwordHash: string,
   ): Promise<boolean> {
-  try {
-    const isMatch = await argon.verify(passwordHash, password, this.hash_options);
-    return  isMatch
-  } catch (error) {
-    throw new InternalServerErrorException(error.message)
-  }
-    
+    try {
+      console.log("password: ", password);
+      console.log("passwordHash: ", passwordHash);
+      const isMatch = await argon.verify(
+        passwordHash,
+        password,
+        this.hash_options,
+      );
+      return isMatch;
+    } catch (error) {
+      throw new InternalServerErrorException(error.message);
+    }
   }
 
-  private observableToPromise(value) {
+  private observableToPromise(value: unknown): Promise<unknown> {
     if (!isObservable(value)) {
-      throw new TypeError(`Expected an \`Observable\`, got \`${typeof value}\``);
+      throw new TypeError(
+        `Expected an \`Observable\`, got \`${typeof value}\``,
+      );
     }
-  
+
     const values = [];
-  
+
     return new Promise((resolve, reject) => {
       value.subscribe({
         next(value) {
@@ -154,5 +184,6 @@ export class AuthService {
           resolve(values);
         },
       });
-    });}
+    });
+  }
 }

@@ -1,7 +1,7 @@
 import { Controller } from "@nestjs/common";
 import { MessagePattern, Payload } from "@nestjs/microservices";
 import { UserService } from "./user.service";
-import { JsonParsePipe } from "./pipes/index"
+import { JsonParsePipe } from "./pipes/index";
 
 @Controller()
 export class UserController {
@@ -9,10 +9,8 @@ export class UserController {
 
   @MessagePattern("signup")
   async signup_message(@Payload(JsonParsePipe) data: any): Promise<any> {
-    console.log("[signup data] "+typeof data)
-    const create_user_response = await this.userService.createUser(
-      data,
-    );
+    console.log("[signup data] " + typeof data);
+    const create_user_response = await this.userService.createUser(data);
     return create_user_response;
   }
 
@@ -28,6 +26,8 @@ export class UserController {
 
   @MessagePattern("logout")
   async logout_message(@Payload(JsonParsePipe) data: any) {
-    return await this.userService.logout(data) != null ? {message: "Successfully logged out"} : {message: "Already logged out"};
+    return (await this.userService.logout(data))
+      ? { message: "Successfully logged out" }
+      : { message: "Already logged out" };
   }
 }
